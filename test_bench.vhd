@@ -1,5 +1,4 @@
 library IEEE;
-library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
@@ -32,7 +31,6 @@ architecture Sim of Reg_File_tb is
     end component;
 
 begin
-   
     DUT: Reg_File
     port map (
         clk       => tb_clk,
@@ -45,7 +43,7 @@ begin
         readData2 => tb_rd_data2
     );
 
-    
+    -- Clock Process (Generate a clock signal)
     clk_proc: process
     begin
         while true loop
@@ -57,14 +55,14 @@ begin
         wait;
     end process;
 
-   
+    -- Test Process
     tb_proc: process
     begin
         wait for CLK_PERIOD / 2;
 
-        -- Case 1: Write x19 to Register 2
+        -- Case 1: Write to register then read from it in the same cycle
         tb_wr_enable <= '1';
-        tb_wr_addr   <= "00010"; 
+        tb_wr_addr   <= "00010";  
         tb_rd_addr1  <= "00010";  
         tb_wr_data   <= x"00000019"; 
         wait for CLK_PERIOD;  
@@ -72,16 +70,16 @@ begin
         assert tb_rd_data1 = x"00000019"
             report "Case 1 Failed: Expected x19 in Register 2" severity error;
 
-        -- Case 2: Write x32 to Register 1, then x4b to Register 2
-        tb_wr_addr   <= "00001";  
+        -- Case 2: WWrite to two registers and read from both at the same time
+        tb_wr_addr   <= "00001"; 
         tb_wr_data   <= x"00000032";  
         wait for CLK_PERIOD;
         
-        tb_wr_addr   <= "00010";  
-        tb_wr_data   <= x"0000004B";  
+        tb_wr_addr   <= "00010"; 
+        tb_wr_data   <= x"0000004B"; 
         
         tb_rd_addr1  <= "00001";  
-        tb_rd_addr2  <= "00010";  
+        tb_rd_addr2  <= "00010";
         wait for CLK_PERIOD;
 
         assert tb_rd_data1 = x"00000032"
@@ -89,11 +87,11 @@ begin
         assert tb_rd_data2 = x"0000004B"
             report "Case 2 Failed: Expected x4b in Register 2" severity error;
 
-        -- Case 3: Verify Read-Only when Write Enable is Disabled
+        -- Case 3: Trying to write while enable=0
         tb_wr_enable <= '0';
         tb_wr_addr   <= "00001";  
         tb_rd_addr1  <= "00001";  
-        tb_wr_data   <= x"00000064";  
+        tb_wr_data   <= x"00000064"; 
         wait for CLK_PERIOD;
 
         assert tb_rd_data1 = x"00000032"
@@ -102,7 +100,7 @@ begin
         -- Case 4: Verify Read on Falling Edge
         tb_wr_enable <= '1';
         tb_wr_addr   <= "00001";
-        tb_wr_data   <= x"00000096";  
+        tb_wr_data   <= x"00000096"; 
         wait for CLK_PERIOD;
 
         tb_wr_enable <= '0';
@@ -115,7 +113,7 @@ begin
         -- Case 5: Verify Zero Register Always Reads as Zero
         tb_wr_enable <= '1';
         tb_wr_addr   <= "00000";  
-        tb_wr_data   <= x"00000077";  
+        tb_wr_data   <= x"00000077"; 
         wait for CLK_PERIOD;
 
         tb_wr_enable <= '0';
@@ -125,8 +123,10 @@ begin
         assert tb_rd_data1 = x"00000000"
             report "Case 5 Failed: Zero register should always be 0" severity error;
             
+        -- Print Success Message
+        report "All test cases passed successfully!" severity note;
         
-               
+        -- Stop Simulation            
         std.env.stop;
     end process;
 
